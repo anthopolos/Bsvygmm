@@ -1,0 +1,15 @@
+#' Longitudinal data for fitting a 2-class model with spatial and independent random effects to predict latent class membership.
+#'
+#' A dataset containing longitudinal measurements for subjects nested in clusters, which are in term nested in strata. This dataset was generated using the \code{simdat} function in the package.
+#'
+#' @format A data frame with 600 subjects, each of whom has 3 measurements. There are 50 clusters, each of which contains 12 subjects. There are 10 strata, each of which contains 5 clusters, and therefore 60 subjects. The data frame has 1800 rows and 6 variables defined as follows.
+#'
+#' \describe{
+#' \item{subjectID}{Subject identifier for each measurement}
+#' \item{Y}{Longitudinal measurements}
+#' \item{time}{Time variable indicating the interview wave with value 1, 2, 3}
+#' \item{clusterID}{Cluster identifier}
+#' \item{stratumID}{Stratum identifier}
+#' \item{x1}{A subject-level covariate generated from a standard normal distribution}
+#' }
+"data"
