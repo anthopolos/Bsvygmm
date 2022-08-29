@@ -28,7 +28,7 @@ update_Z_BinaryP(
 
 \item{alpha}{\code{K-1} column matrix of regression coefficients for the B-spline.}
 
-\item{deltaStratum}{A \code{K-1} column matrix of stratum specific effects.}
+\item{deltaStratum}{A \code{K-1} column matrix of stratum specific effects. Equals \code{NULL} if not desired.}
 
 \item{u}{A \code{K-1} column matrix of area segment specific effects for modeling correlations among subjects in the same area segment. Equals \code{NULL} if not desired.}
 

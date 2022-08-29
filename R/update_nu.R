@@ -4,7 +4,7 @@
 #' @param Z \code{K-1} column matrix of latent variables Z.
 #' @param delta \code{K-1} column matrix of latent class-specific regression coefficients.
 #' @param alpha \code{K-1} column matrix of regression coefficients for the B-spline.
-#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects.
+#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects. Equals \code{NULL} if not desired.
 #' @param u A \code{K-1} column matrix of area segment specific effects for modeling correlations among subjects in the same area segment. Equals \code{NULL} if not desired.
 #' @param nu A \code{K-1} column matrix of spatial random effects.
 #' @param xi2 A \code{K-1} vector of variances for the arae segment level intercepts.
@@ -44,19 +44,24 @@ update_nu <- function(Z, delta, alpha, deltaStratum, u, nu, xi2, W, B, ADJ, clus
       # Choose among mean components, including cluster level unstructured heterogeneity and spline
       if (!is.null(u)) {
         if (spline) {
-          mu <- Z[ , k] - W %*% delta[ , k] - B %*% alpha[ , k] - u[factor(clusterIDSub), k] - deltaStratum[factor(stratumIDSub), k]
+          mu <- Z[ , k] - W %*% delta[ , k] - B %*% alpha[ , k] - u[factor(clusterIDSub), k]
         } else {
-          mu <- Z[ , k] - W %*% delta[ , k] - u[factor(clusterIDSub), k] - deltaStratum[factor(stratumIDSub), k]
+          mu <- Z[ , k] - W %*% delta[ , k] - u[factor(clusterIDSub), k]
         }
 
       }
 
       if (is.null(u)) {
         if (spline) {
-          mu <- Z[ , k] - W %*% delta[ , k] - B %*% alpha[ , k] - deltaStratum[factor(stratumIDSub), k]
+          mu <- Z[ , k] - W %*% delta[ , k] - B %*% alpha[ , k]
         } else {
-          mu <- Z[ , k] - W %*% delta[ , k] - deltaStratum[factor(stratumIDSub), k]
+          mu <- Z[ , k] - W %*% delta[ , k]
         }
+      }
+
+      # Stratum level effect if desired
+      if (!is.null(deltaStratum)) {
+        mu <- mu - deltaStratum[factor(stratumIDSub), k]
       }
 
       # Prior mean for all nu j
@@ -91,19 +96,23 @@ update_nu <- function(Z, delta, alpha, deltaStratum, u, nu, xi2, W, B, ADJ, clus
     ### Choose among mean components, including cluster level unstructured heterogeneity and spline
     if (!is.null(u)) {
       if (spline) {
-        mu <- Z - W %*% delta - B %*% alpha - u[factor(clusterIDSub)] - deltaStratum[factor(stratumIDSub)]
+        mu <- Z - W %*% delta - B %*% alpha - u[factor(clusterIDSub)]
       } else {
-        mu <- Z - W %*% delta - u[factor(clusterIDSub)] - deltaStratum[factor(stratumIDSub)]
+        mu <- Z - W %*% delta - u[factor(clusterIDSub)]
       }
 
     }
 
     if (is.null(u)) {
       if (spline) {
-        mu <- Z - W %*% delta - B %*% alpha - deltaStratum[factor(stratumIDSub)]
+        mu <- Z - W %*% delta - B %*% alpha
       } else {
-        mu <- Z - W %*% delta - deltaStratum[factor(stratumIDSub)]
+        mu <- Z - W %*% delta
       }
+    }
+
+    if (!is.null(deltaStratum)) {
+      mu <- mu - deltaStratum[factor(stratumIDSub)]
     }
 
     # Prior mean for all nu j

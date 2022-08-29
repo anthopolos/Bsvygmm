@@ -2,8 +2,8 @@
 #'
 #' @description An inverge gamma or uniform prior is used to update the variance at the observation level.
 #' @param C Latent class assignments for each subject.
-#' @param zeta  A \code{K} column matrix of intercepts at the stratum level.
-#' @param rho  A \code{K} column matrix of intercepts at the area segment level.
+#' @param zeta  A \code{K} column matrix of intercepts at the stratum level. Equals \code{NULL} if not desired.
+#' @param rho  A \code{K} column matrix of intercepts at the area segment level.  Equals \code{NULL} if not desired.
 #' @param b  A \code{q} column matrix of subject specific effects.
 #' @param beta A \code{K} column matrix of regression coefficients associated with \code{Vf}.
 #' @param Y Longitudinal measurements.
@@ -44,11 +44,20 @@ update_sigma2 <- function(C, zeta, rho, b, beta, Y, Vr, Vf, prior.shape, prior.s
 
     ### Unknown paramters
     betak <- beta[ , k]
-    rhok  <- rho[ind_cluster, k]
-    zetak  <- zeta[ind_stratum, k]
 
-    rhokObs <- rhok[factor(clusterIDObsk)]
-    zetakObs <- zetak[factor(stratumIDObsk)]
+    if (!is.null(rho)) {
+      rhok  <- rho[ind_cluster, k]
+      rhokObs <- rhok[factor(clusterIDObsk)]
+    } else {
+      rhokObs <- NULL
+    }
+
+    if (!is.null(zeta)) {
+      zetak  <- zeta[ind_stratum, k]
+      zetakObs <- zetak[factor(stratumIDObsk)]
+    } else {
+      zetakObs <- NULL
+    }
 
     # Construct N x n*q matrix of X to facilitate matrix algebra
     #[1 1 0 0 0 / 1 2 0 0 0 / 1 3 0 0 0], for q=2 columns 1 and 2 are subject 1's intercept and random slope for time
@@ -59,7 +68,16 @@ update_sigma2 <- function(C, zeta, rho, b, beta, Y, Vr, Vf, prior.shape, prior.s
     ind_sub <- which(C == k)
 
     bk <- b[ind_sub, ] # Here we choose class k
-    muy <- Vfk %*% betak + convert_Vr_sub %*% c(t(bk)) + rhokObs + zetakObs
+
+    # Mean function depends on inclusion of cluster level rho and stratum level zeta
+    muy <- Vfk %*% betak + convert_Vr_sub %*% c(t(bk))
+
+    if (!is.null(rhokObs)) {
+      muy <- muy + rhokObs
+    }
+    if (!is.null(zetakObs)) {
+      muy <- muy + zetakObs
+    }
 
     llik <- crossprod(Yk - muy, Yk - muy)
     df <- length(Yk)

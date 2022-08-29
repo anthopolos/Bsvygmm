@@ -11,9 +11,9 @@ get_ESS(sigma2, Phi, Omega, Psi, priorPik, Y, Vr, subjectID)
 
 \item{Phi}{Current iteration of between subject variance-covariance.}
 
-\item{Omega}{Current iteration of between area segment level variance.}
+\item{Omega}{Current iteration of between area segment level variance. Equals \code{NULL} if not desired.}
 
-\item{Psi}{Current iteration of between stratum level variance.}
+\item{Psi}{Current iteration of between stratum level variance.  Equals \code{NULL} if not desired.}
 
 \item{priorPik}{Current iteration of prior probability of class membership.}
 

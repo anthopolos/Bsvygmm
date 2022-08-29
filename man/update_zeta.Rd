@@ -24,7 +24,7 @@ update_zeta(
 
 \item{b}{A \code{q} column matrix of subject specific effects.}
 
-\item{rho}{A \code{K} column matrix of area segment (aka cluster) level intercepts.}
+\item{rho}{A \code{K} column matrix of area segment (aka cluster) level intercepts. Equals \code{NULL} if not desired.}
 
 \item{beta}{A \code{K} column matrix of regression coefficients associated with \code{Vf}.}
 

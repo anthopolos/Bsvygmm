@@ -7,7 +7,7 @@
 update_priorPik(Z)
 }
 \arguments{
-\item{Z}{A \code{K-1} column matrix of latent variable draws.}
+\item{Z}{A \code{K-1} column matrix of latent normal variables in the multinomial probit model.}
 }
 \value{
 An \code{K} matrix of prior probabilities.

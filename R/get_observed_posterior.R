@@ -20,10 +20,12 @@
 #' @param ADJ Adjacency matrix used in computing prior mean of area segment structured random effects.
 #' @param priors List of prior distributions from model fitting.
 #' @param hierVar List of priors for variance at observation level and hierarchical variances.
-#' @param modelType String for model type.
+#' @param LCStratumModelType A string. For the latent class membership model, if \code{LCStratumModelType} is \code{Random}, then the latent class membership model includes stratum level random effects. If \code{Fixed}, then stratum level random effects are not included in the latent class membership model. Stratum fixed effects may be included in the design matrix \code{W}.
+#' @param LCClusterModelType String for model type in the latent class membership model.
+#' @param LRModelType String for model type in the longitudinal response model.
 #' @param spline Logical. If \code{TRUE}, a spline is included in the latent class membership model.
 #' @return Observed data likelihood at the current iteration.
-get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, alpha, u, deltaStratum, nu, tau2, gamma2, xi2, priorPik, ADJ, priors, hierVar, modelType, spline) {
+get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, alpha, u, deltaStratum, nu, tau2, gamma2, xi2, priorPik, ADJ, priors, hierVar, LCStratumModelType, LCClusterModelType, LRModelType, spline) {
 
   # Observed data posterior as a product of the observed data likelhood and the prior information, computed on the log scale
   # =& \bigg( \prod_{i = 1}^n \sum_{k = 1}^K \pi_{sjik} f(y_{sji} \ | \ \beta_k, \sigma^2_k, \Phi_k, \psi^2_k, \omega^2_k, v^f_{sji}, v^r_{sji}) \bigg) \prod_{k = 1}^K p(\beta_k) p(\sigma^2_k), p(\Phi_k) p(\omega^2_k) p(\psi^2_k) \prod_{k = 1}^{K-1} p(\delta_k) p(\delta0Cluster_k) p(\delta0Stratum_k)
@@ -33,14 +35,16 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
   q <- dim(Phi)[1]
   K <- dim(priorPik)[2]
 
-  M <- nrow(as.matrix(deltaStratum))
+  if (LCStratumModelType == "Random") {
+    M <- nrow(as.matrix(deltaStratum))
+  }
 
-  if (modelType == "Unstr") {
+  if (LCClusterModelType == "Unstr") {
     J <- nrow(as.matrix(u))
-  } else if (modelType == "Str") {
+  } else if (LCClusterModelType == "Str") {
     nJ <- nrow(ADJ)
     ADJ <- ADJ == 1
-  } else if (modelType == "Both") {
+  } else if (LCClusterModelType == "Both") {
     J <- nrow(as.matrix(u))
     nJ <- nrow(ADJ)
     ADJ <- ADJ == 1
@@ -48,13 +52,17 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
 
   ### Prior contributions to observed data posterior
   prior_beta <- prior_sigma2 <- prior_Omega <- prior_Psi <- prior_Phi <- rep(NA, K)
-  prior_delta <- prior_deltaStratum <- prior_gamma2 <- rep(NA, K - 1)
+  prior_delta <- prior_gamma2 <- rep(NA, K - 1)
 
-  if (modelType == "Unstr") {
+  if (LCStratumModelType == "Random") {
+    prior_deltaStratum <- rep(NA, K - 1)
+  }
+
+  if (LCClusterModelType == "Unstr") {
     prior_u <- prior_tau2 <- rep(NA, K - 1)
-  } else if (modelType == "Str") {
+  } else if (LCClusterModelType == "Str") {
     prior_nu <- prior_xi2 <- rep(NA, K - 1)
-  } else if (modelType == "Both") {
+  } else if (LCClusterModelType == "Both") {
     prior_nu <- prior_xi2 <-  prior_u <- prior_tau2 <- rep(NA, K - 1)
   }
 
@@ -66,8 +74,6 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
   for (k in 1:K) {
 
     Phik <- Phi[ , , k]
-    Omegak <- Omega[k]
-    Psik <- Psi[k]
 
     # Prior contributions in longitudinal outcomes model
     prior_beta[k] <- mvtnorm::dmvnorm(beta[ , k], mean = priors[[6]][[1]], sigma = priors[[6]][[2]], log = FALSE)
@@ -77,13 +83,47 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
       prior_sigma2[k] <- 1 / sqrt(sigma2[k])
     }
 
-    if (hierVar[[1]] == "IG") {
-      prior_Omega[k] <- 1 / dgamma(Omegak, priors[[8]][[1]], priors[[8]][[2]], log = FALSE)
-      prior_Psi[k] <- 1 / dgamma(Psik, priors[[7]][[1]], priors[[7]][[2]], log = FALSE)
-    } else if (hierVar[[1]] == "Unif") {
-      prior_Omega[k] <- 1 / sqrt(Omegak)
-      prior_Psi[k] <- 1 / sqrt(Psik)
-    }
+    if (LRModelType == "Both") {
+
+      Omegak <- Omega[k]
+      Psik <- Psi[k]
+
+      if (hierVar[[1]] == "IG") {
+        prior_Omega[k] <- 1 / dgamma(Omegak, priors[[8]][[1]], priors[[8]][[2]], log = FALSE)
+        prior_Psi[k] <- 1 / dgamma(Psik, priors[[7]][[1]], priors[[7]][[2]], log = FALSE)
+      } else if (hierVar[[1]] == "Unif") {
+        prior_Omega[k] <- 1 / sqrt(Omegak)
+        prior_Psi[k] <- 1 / sqrt(Psik)
+      }
+
+    } # End of Both condition
+
+
+    if (LRModelType == "Stratum") {
+
+      Psik <- Psi[k]
+
+      if (hierVar[[1]] == "IG") {
+        prior_Psi[k] <- 1 / dgamma(Psik, priors[[7]][[1]], priors[[7]][[2]], log = FALSE)
+      } else if (hierVar[[1]] == "Unif") {
+        prior_Psi[k] <- 1 / sqrt(Psik)
+      }
+
+    } # End of Stratum condition
+
+
+    if (LRModelType == "Cluster") {
+
+      Omegak <- Omega[k]
+
+      if (hierVar[[1]] == "IG") {
+        prior_Omega[k] <- 1 / dgamma(Omegak, priors[[8]][[1]], priors[[8]][[2]], log = FALSE)
+      } else if (hierVar[[1]] == "Unif") {
+        prior_Omega[k] <- 1 / sqrt(Omegak)
+      }
+
+    } # End of Cluster condition
+
 
     prior_Phi[k] <- MCMCpack::diwish(Phik, priors[[9]][[1]], priors[[9]][[2]])
 
@@ -92,19 +132,21 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
   # Prior contributions in latent class membership model
   for (k in 2:K) {
     prior_delta[k - 1] <- mvtnorm::dmvnorm(as.matrix(delta)[ , (k - 1)], mean = priors[[1]][[1]], sigma = priors[[1]][[2]], log = FALSE)
-    prior_deltaStratum[k - 1] <- prod(dnorm(as.matrix(deltaStratum)[ , k - 1], mean = 0, sd = sqrt(gamma2[k - 1]), log = FALSE))
 
-    if (hierVar[[1]] == "IG") {
-      prior_gamma2[k - 1] <- 1 / dgamma(gamma2[k - 1], priors[[2]][[1]], priors[[2]][[2]], log = FALSE)
-    } else if (hierVar[[1]] == "Unif") {
-      prior_gamma2[k - 1] <- 1 / sqrt(gamma2[k - 1])
-    }
+    if (LCStratumModelType == "Random") {
+      prior_deltaStratum[k - 1] <- prod(dnorm(as.matrix(deltaStratum)[ , k - 1], mean = 0, sd = sqrt(gamma2[k - 1]), log = FALSE))
+      if (hierVar[[1]] == "IG") {
+        prior_gamma2[k - 1] <- 1 / dgamma(gamma2[k - 1], priors[[2]][[1]], priors[[2]][[2]], log = FALSE)
+      } else if (hierVar[[1]] == "Unif") {
+        prior_gamma2[k - 1] <- 1 / sqrt(gamma2[k - 1])
+      }
+    } # End LC Stratum condition
 
     if (spline == TRUE) {
       prior_alpha[k - 1] <- mvtnorm::dmvnorm(as.matrix(alpha)[ , (k - 1)], mean = rep(0, dim(as.matrix(alpha))[1]), sigma = priors[[5]][[1]], log = FALSE)
     }
 
-    if (modelType == "Unstr") {
+    if (LCClusterModelType == "Unstr") {
       prior_u[k - 1] <- prod(dnorm(as.matrix(u)[ , k - 1], mean = 0, sd = sqrt(tau2[k - 1]), log = FALSE))
       if (hierVar[[1]] == "IG") {
         prior_tau2[k - 1] <- 1 / dgamma(tau2[k - 1], priors[[4]][[1]], priors[[4]][[2]], log = FALSE)
@@ -113,7 +155,7 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
       }
     } # End of unstr condition
 
-    if (modelType == "Str") {
+    if (LCClusterModelType == "Str") {
       nuk <- as.matrix(nu)[ , k - 1]
       munuk <- sapply(1:nrow(ADJ), function(x){mean(nuk[ADJ[x, ]])}, simplify = TRUE)
       prior_nu[k - 1] <- prod(dnorm(nuk, mean = munuk, sd = sqrt(xi2[k - 1]), log = FALSE))
@@ -125,7 +167,7 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
       }
     } # End of Str condition
 
-    if (modelType == "Both") {
+    if (LCClusterModelType == "Both") {
       prior_u[k - 1] <- prod(dnorm(as.matrix(u)[ , k - 1], mean = 0, sd = sqrt(tau2[k - 1]), log = FALSE))
       nuk <- as.matrix(nu)[ , k - 1]
       munuk <- sapply(1:nrow(ADJ), function(x){mean(nuk[ADJ[x, ]])}, simplify = TRUE)
@@ -144,19 +186,33 @@ get_observed_posterior <- function(llik, beta, Phi, sigma2, Omega, Psi, delta, a
 
   }
 
-  observed_posterior <- llik + sum(log(prior_beta), log(prior_Phi), log(prior_Omega), log(prior_Psi), log(prior_sigma2), log(prior_delta), log(prior_deltaStratum), log(prior_gamma2))
+  observed_posterior <- llik + sum(log(prior_beta), log(prior_Phi), log(prior_sigma2), log(prior_delta))
 
   if (spline == TRUE) {
     observed_posterior <- observed_posterior + sum(log(prior_alpha))
   }
 
-  if (modelType == "Unstr") {
+  if (LCStratumModelType == "Random") {
+    observed_posterior <- observed_posterior + sum(log(prior_deltaStratum), log(prior_gamma2))
+  }
+
+  if (LCClusterModelType == "Unstr") {
     observed_posterior <- observed_posterior + sum(log(prior_u), log(prior_tau2))
-  } else if (modelType == "Str") {
+  } else if (LCClusterModelType == "Str") {
     observed_posterior <- observed_posterior + sum(log(prior_nu), log(prior_xi2))
-  } else if (modelType == "Both") {
+  } else if (LCClusterModelType == "Both") {
     observed_posterior <- observed_posterior + sum(log(prior_u), log(prior_tau2), log(prior_nu), log(prior_xi2))
   }
+
+
+  if (LRModelType == "Both") {
+    observed_posterior <- observed_posterior + sum(log(prior_Omega), log(prior_Psi))
+  } else if (LRModelType == "Stratum") {
+    observed_posterior <- observed_posterior + sum(log(prior_Psi))
+  } else if (LRModelType == "Cluster") {
+    observed_posterior <- observed_posterior + sum(log(prior_Omega))
+  }
+
 
   return(observed_posterior)
 

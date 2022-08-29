@@ -4,8 +4,9 @@
 #' @param Z A \code{K-1} column matrix of latent variable \code{Z}.
 #' @param delta A \code{K-1} column matrix of regression coefficients in the multinomial probit model with \code{k=1} fixed to zero.
 #' @param alpha A \code{K-1} column matrix of regression coefficients for the B-spline.
-#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects.
+#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects. Equals \code{NULL} if not desired.
 #' @param nu A \code{K-1} column matrix of spatial random effects. Equals \code{NULL} if not desired.
+#' @param tau2 A \code{K-1} vector of variance terms for the independent area segment-level random effects \code{u}. Equals \code{NULL} if not desired.
 #' @param W An \code{s} column design matrix of covariates, including a column of one's for intercept.
 #' @param B An \code{R} column design matrix of basis functions for the B-spline.
 #' @param clusterIDSub Area segment or cluster identifier for each subject.
@@ -32,18 +33,23 @@ update_u_BinaryP <- function(Z, delta, alpha, deltaStratum, nu, tau2, W, B, clus
   # Modeling choices regarding spatial random effect
   if (!is.null(nu)) {
     if (spline) {
-      llikSub <- Z - W %*% delta - B %*% alpha - deltaStratum[factor(stratumIDSub)] - nu[clusterIDSubf]
+      llikSub <- Z - W %*% delta - B %*% alpha - nu[clusterIDSubf]
     } else {
-      llikSub <- Z - W %*% delta - deltaStratum[factor(stratumIDSub)] - nu[clusterIDSubf]
+      llikSub <- Z - W %*% delta - nu[clusterIDSubf]
     }
   }
 
   if (is.null(nu)) {
     if (spline) {
-      llikSub <- Z - W %*% delta - B %*%  alpha - deltaStratum[factor(stratumIDSub)]
+      llikSub <- Z - W %*% delta - B %*%  alpha
     } else {
-      llikSub <- Z - W %*% delta - deltaStratum[factor(stratumIDSub)]
+      llikSub <- Z - W %*% delta
     }
+  }
+
+  # Account for stratum level random effects
+  if (!is.null(deltaStratum)) {
+    llikSub <- llikSub - deltaStratum[factor(stratumIDSub)]
   }
 
   # Posterior mean calculation

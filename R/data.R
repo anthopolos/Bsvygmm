@@ -11,5 +11,6 @@
 #' \item{clusterID}{Cluster identifier}
 #' \item{stratumID}{Stratum identifier}
 #' \item{x1}{A subject-level covariate generated from a standard normal distribution}
+#' \item{C}{A subject-level indicator for latent class membership}
 #' }
 "data"

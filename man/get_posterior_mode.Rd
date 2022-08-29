@@ -7,7 +7,7 @@
 get_posterior_mode(samples)
 }
 \arguments{
-\item{x}{Samples.}
+\item{samples}{Samples.}
 }
 \value{
 An index for the mode.

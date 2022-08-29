@@ -22,9 +22,9 @@ update_b(
 \arguments{
 \item{C}{Latent class assignments for each subject.}
 
-\item{rho}{A \code{K} column matrix of area segment level intercepts.}
+\item{rho}{A \code{K} column matrix of area segment level intercepts. Equals \code{NULL} if not desired.}
 
-\item{zeta}{A \code{K} column matrix of stratum level intercepts.}
+\item{zeta}{A \code{K} column matrix of stratum level intercepts. Equals \code{NULL} if not desired.}
 
 \item{beta}{A \code{K} column matrix of regression coefficients associated with \code{Vf}.}
 

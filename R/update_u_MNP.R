@@ -4,8 +4,9 @@
 #' @param Z A \code{K-1} column matrix of latent variable \code{Z}.
 #' @param delta A \code{K-1} column matrix of regression coefficients in the multinomial probit model with \code{k=1} fixed to zero.
 #' @param alpha A \code{K-1} column matrix of regression coefficients for the B-spline.
-#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects.
+#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects. Equals \code{NULL} if not desired.
 #' @param nu A \code{K-1} column matrix of spatial random effects. Equals \code{NULL} if not desired.
+#' @param tau2 A \code{K-1} vector of variance terms for the independent random effects \code{u}. Equals \code{NULL} if not desired.
 #' @param W An \code{s} column design matrix of covariates, including a column of one's for intercept.
 #' @param B An \code{R} column design matrix of basis functions for the B-spline.
 #' @param clusterIDSub Area segment or cluster identifier for each subject.
@@ -37,19 +38,24 @@ update_u_MNP <- function(Z, delta, alpha, deltaStratum, nu, tau2, W, B, clusterI
     # With spatial random effects
     if (!is.null(nu)) {
       if (spline) {
-        llikSub <- Z[ , k] - W %*% delta[ , k] - B %*% alpha[ , k] - deltaStratum[factor(stratumIDSub), k] - nu[clusterIDSubf, k]
+        llikSub <- Z[ , k] - W %*% delta[ , k] - B %*% alpha[ , k] - nu[clusterIDSubf, k]
       } else {
-        llikSub <- Z[ , k] - W %*% delta[ , k] - deltaStratum[factor(stratumIDSub), k] - nu[clusterIDSubf, k]
+        llikSub <- Z[ , k] - W %*% delta[ , k] - nu[clusterIDSubf, k]
       }
     }
 
     # Without spatial random effects
     if (is.null(nu)) {
       if (spline) {
-        llikSub <- Z[ , k] - W %*% delta[ , k] - B %*%  alpha[ , k] - deltaStratum[factor(stratumIDSub), k]
+        llikSub <- Z[ , k] - W %*% delta[ , k] - B %*%  alpha[ , k]
       } else {
-        llikSub <- Z[ , k] - W %*% delta[ , k] - deltaStratum[factor(stratumIDSub), k]
+        llikSub <- Z[ , k] - W %*% delta[ , k]
       }
+    }
+
+    # Account for stratum level random effects
+    if (!is.null(deltaStratum)) {
+      llikSub <- llikSub - deltaStratum[factor(stratumIDSub), k]
     }
 
     # Posterior mean calculation

@@ -29,6 +29,8 @@ update_deltaStratum_BinaryP(
 
 \item{nu}{A \code{K-1} column matrix of spatial random effects. Equals \code{NULL} if not desired.}
 
+\item{gamma2}{A \code{K-1} vector of variances for the stratum level intercepts.}
+
 \item{W}{An \code{s} column design matrix of covariates, including a column of one's for intercept.}
 
 \item{B}{An \code{R} column design matrix of basis functions for the B-spline.}

@@ -4,7 +4,7 @@
 #' @param Z A \code{K-1} column matrix of latent variable \code{Z}.
 #' @param delta A \code{K-1} column matrix of regression coefficients in the multinomial probit model with \code{k=1} fixed to zero.
 #' @param alpha A \code{K-1} column matrix of regression coefficients for the B-spline.
-#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects.
+#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects. Equals \code{NULL} if not desired.
 #' @param u A \code{K-1} column matrix of area segment specific effects for modeling correlations among subjects in the same area segment. Equals \code{NULL} if not desired.
 #' @param nu A \code{K-1} column matrix of spatial random effects. Equals \code{NULL} if not desired.
 #' @param W An \code{s} column design matrix of covariates, including a column of one's for intercept.
@@ -37,9 +37,9 @@ update_delta_BinaryP <- function(Z, delta, alpha, deltaStratum, u, nu, W, B, pri
   # 1. Spatially structured heterogeneity at the cluster level only
   if (!is.null(nu) & is.null(u)) {
     if (spline) {
-      mu <- Z - B %*% alpha - nu[clusterIDSubf] - deltaStratum[factor(stratumIDSub)]
+      mu <- Z - B %*% alpha - nu[clusterIDSubf]
     } else {
-      mu <-  Z - nu[clusterIDSubf] - deltaStratum[factor(stratumIDSub)]
+      mu <-  Z - nu[clusterIDSubf]
     }
 
   }
@@ -47,9 +47,9 @@ update_delta_BinaryP <- function(Z, delta, alpha, deltaStratum, u, nu, W, B, pri
   # 2. Unstructured heterogeneity at the cluster level only
   if (is.null(nu) & !is.null(u)) {
     if (spline) {
-      mu <- Z - B %*% alpha - u[factor(clusterIDSub)] - deltaStratum[factor(stratumIDSub)]
+      mu <- Z - B %*% alpha - u[factor(clusterIDSub)]
     } else {
-      mu <- Z - u[factor(clusterIDSub)] -  deltaStratum[factor(stratumIDSub)]
+      mu <- Z - u[factor(clusterIDSub)]
     }
 
   }
@@ -57,12 +57,30 @@ update_delta_BinaryP <- function(Z, delta, alpha, deltaStratum, u, nu, W, B, pri
   # 3. Spatially structured and unstructured heterogeneity at the cluster level only
   if (!is.null(nu) & !is.null(u)) {
     if (spline) {
-      mu <-  Z - B %*% alpha - u[factor(clusterIDSub)] -  deltaStratum[factor(stratumIDSub)] - nu[clusterIDSubf]
+      mu <-  Z - B %*% alpha - u[factor(clusterIDSub)] - nu[clusterIDSubf]
     } else {
-      mu <- Z - u[factor(clusterIDSub)] -  deltaStratum[factor(stratumIDSub)] - nu[clusterIDSubf]
+      mu <- Z - u[factor(clusterIDSub)] - nu[clusterIDSubf]
     }
 
   }
+
+  # 4. No spatially structured and unstructured heterogeneity at the cluster level
+  if (is.null(nu) & is.null(u)) {
+    if (spline) {
+      mu <-  Z - B %*% alpha
+    } else {
+      mu <- Z
+    }
+
+  }
+
+
+
+  # Add stratum level random effect if desired
+  if (!is.null(deltaStratum)) {
+    mu <- mu - deltaStratum[factor(stratumIDSub)]
+  }
+
 
   post_mean <- post_var %*% (t(W) %*% mu + solve(prior.Sigma) %*% prior.mu)
 

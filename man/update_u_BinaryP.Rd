@@ -25,9 +25,11 @@ update_u_BinaryP(
 
 \item{alpha}{A \code{K-1} column matrix of regression coefficients for the B-spline.}
 
-\item{deltaStratum}{A \code{K-1} column matrix of stratum specific effects.}
+\item{deltaStratum}{A \code{K-1} column matrix of stratum specific effects. Equals \code{NULL} if not desired.}
 
 \item{nu}{A \code{K-1} column matrix of spatial random effects. Equals \code{NULL} if not desired.}
+
+\item{tau2}{A \code{K-1} vector of variance terms for the independent area segment-level random effects \code{u}. Equals \code{NULL} if not desired.}
 
 \item{W}{An \code{s} column design matrix of covariates, including a column of one's for intercept.}
 

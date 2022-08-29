@@ -4,7 +4,9 @@
 \name{ADJ}
 \alias{ADJ}
 \title{Spatial data for fitting a 2-class model with spatial and independent random effects to predict latent class membership}
-\format{A symmetric matrix with 50 rows and 50 columns.}
+\format{
+A symmetric matrix with 50 rows and 50 columns.
+}
 \usage{
 ADJ
 }

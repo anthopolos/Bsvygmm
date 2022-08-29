@@ -4,7 +4,8 @@
 \name{data}
 \alias{data}
 \title{Longitudinal data for fitting a 2-class model with spatial and independent random effects to predict latent class membership.}
-\format{A data frame with 600 subjects, each of whom has 3 measurements. There are 50 clusters, each of which contains 12 subjects. There are 10 strata, each of which contains 5 clusters, and therefore 60 subjects. The data frame has 1800 rows and 6 variables defined as follows.
+\format{
+A data frame with 600 subjects, each of whom has 3 measurements. There are 50 clusters, each of which contains 12 subjects. There are 10 strata, each of which contains 5 clusters, and therefore 60 subjects. The data frame has 1800 rows and 6 variables defined as follows.
 
 \describe{
 \item{subjectID}{Subject identifier for each measurement}
@@ -13,7 +14,9 @@
 \item{clusterID}{Cluster identifier}
 \item{stratumID}{Stratum identifier}
 \item{x1}{A subject-level covariate generated from a standard normal distribution}
-}}
+\item{C}{A subject-level indicator for latent class membership}
+}
+}
 \usage{
 data
 }

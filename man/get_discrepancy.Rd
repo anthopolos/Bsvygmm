@@ -2,56 +2,49 @@
 % Please edit documentation in R/get_discrepancy.R
 \name{get_discrepancy}
 \alias{get_discrepancy}
-\title{Get discrepancy measured computed at observed and replicated data.}
+\title{Get posterior predictive draws of discrepancy the weighted mean squared error at each iteration.}
 \usage{
 get_discrepancy(
   K,
   C,
   b,
-  rho,
-  zeta,
-  beta,
   sigma2,
-  Y,
-  Vr,
-  Vf,
+  beta,
+  zeta,
+  rho,
+  Phi,
+  Omega,
+  Psi,
+  Z,
+  delta,
+  alpha,
+  deltaStratum,
+  u,
+  nu,
+  gamma2,
+  tau2,
+  xi2,
+  priorPik,
+  W,
+  B,
+  ADJ,
+  clusterIDSub,
+  stratumIDSub,
+  spline,
   subjectID,
   clusterIDObs,
-  stratumIDObs
+  stratumIDObs,
+  Y,
+  Vf,
+  Vr,
+  LRModelType,
+  LCClusterModelType,
+  LCStratumModelType
 )
-}
-\arguments{
-\item{K}{Number of latent classes.}
-
-\item{C}{Categorical variable for the latent class of each subject.}
-
-\item{b}{A \code{q} column matrix of subject-level effects.}
-
-\item{rho}{A \code{K} column matrix of area segment level intercepts.}
-
-\item{zeta}{A \code{K} column matrix of stratum level intercepts.}
-
-\item{beta}{Current iteration of fixed effects.}
-
-\item{sigma2}{Current iteration of observation level variance.}
-
-\item{Y}{Vector of longitudinal outcomes.}
-
-\item{Vr}{Design matrix for random effects.}
-
-\item{Vf}{Design matrix for fixed effects.}
-
-\item{subjectID}{Subject identifier for each observation.}
-
-\item{clusterIDObs}{Area segment or cluster identifier for each observation.}
-
-\item{stratumIDObs}{Stratum identifier for each observation.}
-
-\item{priorPik}{Current iteration of prior probability of class membership.}
 }
 \value{
 Draws of the discrepancy measure computed at the observed data and replicated data.
 }
 \description{
-Get discrepancy measured computed at observed and replicated data.
+See references for the discrepancy measure in manuscript. The algorithm used is based on redrawing the complete data. This is consistent with the function \code{get_post_pred_redraw()}.
 }

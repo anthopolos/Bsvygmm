@@ -25,9 +25,9 @@ update_betak_Marginal(
 
 \item{Phi}{Variance-covariance of the subject specific effects.}
 
-\item{Omega}{Variance at the area segment or cluster level.}
+\item{Omega}{Variance at the area segment or cluster level.  Equals \code{NULL} if not desired.}
 
-\item{Psi}{Varianec at the stratum level.}
+\item{Psi}{Variance at the stratum level.  Equals \code{NULL} if not desired.}
 
 \item{prior.mu}{Prior mean.}
 

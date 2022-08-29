@@ -4,20 +4,29 @@
 \alias{update_C_Marginal}
 \title{Update latent class assignments.}
 \usage{
-update_C_Marginal(K, Z, beta, Phi, Omega, Psi, sigma2, Y, Vf, Vr, subjectID)
+update_C_Marginal(
+  priorPik,
+  beta,
+  Phi,
+  Omega,
+  Psi,
+  sigma2,
+  Y,
+  Vf,
+  Vr,
+  subjectID
+)
 }
 \arguments{
-\item{K}{Number of latent classes.}
-
-\item{Z}{Latent draws from the latent class membership model.}
+\item{priorPik}{Current iteration of prior probability of class membership.}
 
 \item{beta}{A \code{K} column matrix of regression coefficients associated with \code{Vf}.}
 
 \item{Phi}{Variance-covariance of the subject specific effects.}
 
-\item{Omega}{Variance at the area segment or cluster level.}
+\item{Omega}{Variance at the area segment or cluster level. Equals \code{NULL} if not desired.}
 
-\item{Psi}{Varianec at the stratum level.}
+\item{Psi}{Variance at the stratum level. Equals \code{NULL} if not desired.}
 
 \item{sigma2}{Observation level variance.}
 

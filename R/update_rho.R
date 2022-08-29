@@ -4,7 +4,7 @@
 #'
 #' @param C Latent class assignments for each subject.
 #' @param b  A \code{q} column matrix of subject specific effects.
-#' @param zeta  A \code{K} column matrix of stratum level intercepts.
+#' @param zeta  A \code{K} column matrix of stratum level intercepts. Equals \code{NULL} if not desired.
 #' @param beta A \code{K} column matrix of regression coefficients associated with \code{Vf}.
 #' @param sigma2 A \code{K} length vector of observation level variances.
 #' @param Omega A \code{K} length vector of area segment level variances.
@@ -47,11 +47,6 @@ update_rho <- function(C, b, zeta, beta, sigma2, Omega, Y, Vf, Vr, subjectID, cl
     bk <- b[ind_sub, ] # Here we choose class k
     betak <- beta[ , k]
 
-    ### Stratum level information
-    ind_stratum <- match(sort(unique(stratumIDObsk)), sort(unique(stratumIDObs)))
-    zetak  <- zeta[ind_stratum, k]
-    zetakObs <- zetak[factor(stratumIDObsk)]
-
     Omegak <- Omega[k]
 
     ### Compute posterior vairance
@@ -61,7 +56,17 @@ update_rho <- function(C, b, zeta, beta, sigma2, Omega, Y, Vf, Vr, subjectID, cl
     post_var <- solve(diag(Nj * as.vector(solve(sigma2k)) + as.vector(solve(Omegak)), nrow = J, ncol = J))
 
     ### Likelihood contribution
-    llikObs <- (Yk -  Vfk %*% betak - as.vector(convert_Vr_sub %*% c(t(bk))) - zetakObs) / sigma2k
+    # Calculation depends on whether stratum level information included in the model or not
+    if (is.null(zeta)) {
+      llikObs <- (Yk -  Vfk %*% betak - as.vector(convert_Vr_sub %*% c(t(bk)))) / sigma2k
+    } else {
+      # Stratum level information
+      ind_stratum <- match(sort(unique(stratumIDObsk)), sort(unique(stratumIDObs)))
+      zetak  <- zeta[ind_stratum, k]
+      zetakObs <- zetak[factor(stratumIDObsk)]
+      llikObs <- (Yk -  Vfk %*% betak - as.vector(convert_Vr_sub %*% c(t(bk))) - zetakObs) / sigma2k
+   }
+
     # Sum likelihood over observations in each cluster tapply will order by factor level
     llik <- as.vector(tapply(llikObs, clusterIDObskf, sum))
     # Assign clusters that do not appear in class k and therefore do not have a likelihood contribution a value of zero

@@ -6,6 +6,8 @@
 \usage{
 simdat(
   K,
+  data,
+  forms,
   delta,
   gamma2,
   tau2,
@@ -15,20 +17,22 @@ simdat(
   Omega,
   Psi,
   sigma2,
-  W,
   ADJ,
-  Vf,
-  Vr,
   subjectID,
-  clusterIDObs,
-  stratumIDObs,
-  clusterIDSub,
-  stratumIDSub,
-  modelType
+  time,
+  clusterID,
+  stratumID,
+  LCStratumModelType,
+  LCClusterModelType,
+  LRModelType
 )
 }
 \arguments{
 \item{K}{Number of latent classes.}
+
+\item{data}{A data frame in long format for the analysis variables in the growth mixture model.}
+
+\item{forms}{A named list with 3 elements named \code{W}, \code{Xf}, and \code{Xr}. \code{W} must be a formula for the latent class membership model (e.g., \code{ ~ female + NHW}). \code{Xf} specifies the design matrix for the fixed effects. It may equal a character string \code{dummy} if the user desires a design matrix with dummy indicators for each time point. Otherwise, \code{Xf} will equal a formula (e.g., \code{~ time}) where an intercept will be generated in the call.\code{Xr} is the design matrix for the random effects. It may equal the character string \code{same} if \code{Xr} is the same as \code{Xf}. Otherwise, \code{Xr} will equal a formula.}
 
 \item{delta}{A \code{K-1} column matrix of regression coefficients for the latent class membership model.}
 
@@ -42,31 +46,27 @@ simdat(
 
 \item{Phi}{Variance-covariance of the subject specific effects.}
 
-\item{Omega}{Variance at the area segment or cluster level.}
+\item{Omega}{Variance at the area segment or cluster level. Equals \code{NULL} if not desired.}
 
-\item{Psi}{Varianec at the stratum level.}
+\item{Psi}{Variance at the stratum level. Equals \code{NULL} if not desired.}
 
 \item{sigma2}{Observation level variance.}
 
-\item{W}{A design matrix of an intercept and covariates for the latent class membership model.}
-
 \item{ADJ}{A binary symmetric adjacency matrix. Equal to \code{NULL} if spatial correlations are not included in the latent class membership model.}
 
-\item{Vf}{A design matrix for fixed effects in the longitudinal outcome model.}
+\item{subjectID}{A string for the name of the subject identifier in \code{data}.}
 
-\item{Vr}{A design matrix for the subject-level random effects in the longitudinal outcome model. \code{Vr} is a subset or equal to \code{Vf}.}
+\item{time}{A string for the name of the time variable in the dataset.}
 
-\item{subjectID}{Subject identifier for each observation.}
+\item{clusterID}{A string for the name of the area segment or cluster identifier in \code{data}.}
 
-\item{clusterIDObs}{Area segment or cluster identifier for each observation.}
+\item{stratumID}{A string for the name of the stratum identifier in \code{data}.}
 
-\item{stratumIDObs}{Stratum identifier for each observation.}
+\item{LCStratumModelType}{A string. For the latent class membership model, if \code{LCStratumModelType} is \code{Random}, then the latent class membership model includes stratum level random effects. If \code{Fixed}, then stratum level random effects are not included in the latent class membership model. Stratum fixed effects may be included in the design matrix \code{W}.}
 
-\item{clusterIDSub}{Area segment or cluster identifier for each subject.}
+\item{LCClusterModelType}{A string. For the latent class memberhsip model, if \code{LCModelType} is \code{Unstr}, then the latent class membership model includes only cluster level random effects that account for within-cluster correlations. If \code{Str}, then the latent class membership model includes only cluster level random effects that account for spatial correlations among clusters. If \code{Both}, then both types of random effects are included. If \code{None}, then no random effects are included.}
 
-\item{stratumIDSub}{Stratum identifier for each subject.}
-
-\item{modelType}{A string. For the latent class memberhsip model, if \code{modelType} is \code{Unstr}, then the latent class membership model includes only cluster level random effects that account for within-cluster correlations. If \code{Str}, then the latent class membership model includes only cluster level random effects that account for spatial correlations among clusters. If \code{Both}, then both types of random effects are included.}
+\item{LRModelType}{A string. For the longitudinal response model, if \code{LRModelType} is \code{Stratum}, then the longitudinal response model includes only stratum level random effects that account for within-stratum correlations. If \code{Cluster}, then the longitudinal response model includes only cluster level random effects that account for within-cluster correlations. If \code{Both}, then both types of random effects are included. If neither are desired specify as \code{None}.}
 }
 \value{
 A list with simulated longitudinal otucomes and latent class memberships.

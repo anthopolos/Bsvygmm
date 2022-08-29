@@ -6,6 +6,7 @@
 #' @param alpha \code{K-1} column matrix of regression coefficients for the B-spline.
 #' @param u A \code{K-1} column matrix of area segment specific effects for modeling correlations among subjects in the same area segment. Equals \code{NULL} if not desired.
 #' @param nu A \code{K-1} column matrix of spatial random effects. Equals \code{NULL} if not desired.
+#' @param gamma2 A \code{K-1} vector of variances for the stratum level intercepts.
 #' @param W An \code{s} column design matrix of covariates, including a column of one's for intercept.
 #' @param B An \code{R} column design matrix of basis functions for the B-spline.
 #' @param clusterIDSub Area segment or cluster identifier for each subject.

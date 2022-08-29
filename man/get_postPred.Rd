@@ -6,12 +6,12 @@
 \usage{
 get_postPred(
   K,
-  beta,
-  sigma2,
-  priorPik,
+  C,
   b,
   rho,
   zeta,
+  beta,
+  sigma2,
   Vr,
   Vf,
   subjectID,
@@ -22,17 +22,17 @@ get_postPred(
 \arguments{
 \item{K}{Number of latent classes.}
 
-\item{beta}{Current iteration of fixed effects.}
-
-\item{sigma2}{Current iteration of observation level variance.}
-
-\item{priorPik}{Current iteration of prior probability of class membership.}
+\item{C}{Categorical variable for the latent class of each subject.}
 
 \item{b}{A \code{q} column matrix of subject-level effects.}
 
-\item{rho}{A \code{K} column matrix of area segment level intercepts.}
+\item{rho}{A \code{K} column matrix of area segment level intercepts. Equals \code{NULL} if not desired.}
 
-\item{zeta}{A \code{K} column matrix of stratum level intercepts.}
+\item{zeta}{A \code{K} column matrix of stratum level intercepts. Equals \code{NULL} if not desired.}
+
+\item{beta}{Current iteration of fixed effects.}
+
+\item{sigma2}{Current iteration of observation level variance.}
 
 \item{Vr}{Design matrix for random effects.}
 
@@ -48,5 +48,5 @@ get_postPred(
 Draws from the posterior predictive distribution at the current iteration.
 }
 \description{
-The reference for the approach is from algorithm 3.7 on page 91 of Fruhwirth-Schnatter, S. (2006) Finite Mixture and Markov Switching Models. Springer Science & Business Media, New York. The latent classes are redrawn using the probabilities of latent class membership obtained from the latent class membership model.
+The reference for the approach is from Gelman BDA page 530-31. To conduct model checking, we take posterior predictive draws of \code{Y} conditional on \code{C}.
 }

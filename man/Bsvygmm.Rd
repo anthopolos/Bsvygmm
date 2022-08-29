@@ -6,19 +6,19 @@
 \usage{
 Bsvygmm(
   K,
-  W,
-  B,
+  data,
+  forms,
   ADJ,
   Y,
-  Vr,
-  Vf,
+  time,
   subjectID,
-  clusterIDObs,
-  stratumIDObs,
-  clusterIDSub,
-  stratumIDSub,
+  clusterID,
+  stratumID,
   spline,
-  modelType,
+  B,
+  LCStratumModelType,
+  LCClusterModelType,
+  LRModelType,
   priors,
   hierVar,
   inits,
@@ -26,37 +26,38 @@ Bsvygmm(
   burn,
   monitor,
   update,
+  n.reps,
   writeSamples
 )
 }
 \arguments{
 \item{K}{A scalar for the number of assumed unobserved, latent classes.}
 
-\item{W}{A design matrix of an intercept and covariates for the latent class membership model, with column names to be used in MCMC storage.}
+\item{data}{A data.frame with the variables to be used in the latent class and longitudinal outcomes models.}
 
-\item{B}{A design matrix of basis functions for the B-spline in the latent class membership model.}
+\item{forms}{A named list with 3 elements named \code{W}, \code{Xf}, and \code{Xr}. \code{W} must be a formula for the latent class membership model (e.g., \code{ ~ female + NHW}). \code{Xf} specifies the design matrix for the fixed effects. It may equal a character string \code{dummy} if the user desires a design matrix with dummy indicators for each time point. Otherwise, \code{Xf} will equal a formula (e.g., \code{~ time}) where an intercept will be generated in the call.\code{Xr} is the design matrix for the random effects. It may equal the character string \code{same} if \code{Xr} is the same as \code{Xf}. Otherwise, \code{Xr} will equal a formula.}
 
 \item{ADJ}{A binary symmetric adjacency matrix. Equal to \code{NULL} if spatial correlations are not included in the latent class membership model.}
 
-\item{Y}{Longitudinal measurements.}
+\item{Y}{Character for the name of the variable with the longitudinal measurements in \code{data}.}
 
-\item{Vr}{A design matrix for the subject-level random effects in the longitudinal outcome model. \code{Vr} is a subset or equal to \code{Vf}.}
+\item{time}{Character for the name of the variable with the interview wave in integer values in \code{data}.}
 
-\item{Vf}{A design matrix for fixed effects in the longitudinal outcome model, with column names to be used in MCMC storage.}
+\item{subjectID}{Character for the subject identifier for each observation in \code{data}.}
 
-\item{subjectID}{Subject identifier for each observation.}
+\item{clusterID}{Character for area segment or cluster identifier for each observation in \code{data}.}
 
-\item{clusterIDObs}{Area segment or cluster identifier for each observation.}
-
-\item{stratumIDObs}{Stratum identifier for each observation.}
-
-\item{clusterIDSub}{Area segment or cluster identifier for each subject.}
-
-\item{stratumIDSub}{Stratum identifier for each subject.}
+\item{stratumID}{Character for stratum identifier for each observation in \code{data}.}
 
 \item{spline}{Logical. If \code{TRUE}, a B-spline is included for the basis functions in argument \code{B} for the latent class membership model.}
 
-\item{modelType}{A string. For the latent class memberhsip model, if \code{modelType} is \code{Unstr}, then the latent class membership model includes only cluster level random effects that account for within-cluster correlations. If \code{Str}, then the latent class membership model includes only cluster level random effects that account for spatial correlations among clusters. If \code{Both}, then both types of random effects are included.}
+\item{B}{A design matrix of basis functions for the B-spline in the latent class membership model.}
+
+\item{LCStratumModelType}{A string. For the latent class membership model, if \code{LCStratumModelType} is \code{Random}, then the latent class membership model includes stratum level random effects. If \code{Fixed}, then stratum level random effects are not included in the latent class membership model. Stratum fixed effects may be included in the design matrix for the fixed effects \code{W}.}
+
+\item{LCClusterModelType}{A string. For the latent class membership model, if \code{LCClusterModelType} is \code{Unstr}, then the latent class membership model includes only cluster level random effects that account for within-cluster correlations. If \code{Str}, then the latent class membership model includes only cluster level random effects that account for spatial correlations among clusters. If \code{Both}, then both types of random effects are included. If \code{None}, then neither random effects are included.}
+
+\item{LRModelType}{A string. For the longitudinal response model, if \code{LRModelType} is \code{Stratum}, then the longitudinal response model includes only stratum level random effects that account for within-stratum correlations. If \code{Cluster}, then the longitudinal response model includes only cluster level random effects that account for within-cluster correlations. If \code{Both}, then both types of random effects are included. If neither stratum or cluster random effects are desired, specify as \code{None}.}
 
 \item{priors}{A nested list of prior parameters. All regression coefficients are assigned a normal prior distribution. All scalar variance terms are assigned an inverse gamma prior distribution or a uniform prior distribution, according to user choice. The variance-covariance matrix for the subject level random effects is assigned an inverse-Wishart distribution. If any parameters are not needed in the model, the element in the list can be set to NULL. The prior distributions are not allowed to vary by latent class. Details are provided in the \code{Details} section.}
 
@@ -71,6 +72,8 @@ Bsvygmm(
 \item{monitor}{Logical. If \code{TRUE}, then plots of the current iteration for the first four \code{beta} will appear, after burn-in.}
 
 \item{update}{A scalar for the interval at which to print the current iteration. If monitor is \code{TRUE}, then trace plots will also be updated at this interval.}
+
+\item{n.reps}{MCMC updating threshold at which to start printing selected posterior simulations to file.}
 
 \item{writeSamples}{Logical. If \code{TRUE}, then MCMC samples of all of the random effects, draws from the posterior predictive distribution, and the discrepancy measure used to evaluate overall model fit are written to text files, after burn-in. The text files for each of the random effects are accompanied by corresponding text files with column name information.}
 }
@@ -89,6 +92,7 @@ A list of matrices of stored MCMC samples (\code{n.samples-burn}) for unknown pa
 \item \code{store_phi}: Variance-covariance of the subject-level random effects in the longitudinal outcomes model.
 \item \code{store_sigma2}: Observation-level variance in the longitudinal outcomes model.
 \item \code{store_pi}: Posterior probabilities of latent class assignment.
+\item \code{store_priorPi}: Latent class membership probabilities.
 }
 
 If \code{writeSamples = TRUE}, then samples for the random effects, draws from the posterior predictive distribution, and discrepancy measure are written to separate text files after burn-in. Corresponding text files with the column names are also written.
@@ -97,18 +101,20 @@ For the latent class membership model, the stratum-level random effects are stor
 
 For the longitudinal outcomes model, the stratum-level random effects are stored in \code{store_zeta.txt}; the cluster-level random effects are stored in \code{store_rho.txt}; the subject-level random effects are stored in \code{store_b.txt}.
 
-Draws from the posterior predictive distribution are stored in \code{store_Ydraw.txt}. This file is of dimension \code{n.samples - burn} by \code{N}, where \code{N} is the number of observations (i.e., \code{length(Y)}).
+Draws of the longitudinal outcome conditional on latent class from the posterior predictive distribution are stored in \code{store_Ydraw.txt}. This file is of dimension \code{n.samples - burn} by \code{N}, where \code{N} is the number of observations (i.e., \code{length(Y)}).
 
-Samples of a measure of discrepancy are stored in \code{store_T.txt}. This file is of dimension \code{n.samples - burn} by \code{2}, where the first column is the discrepancy measure computed using the observed data, and the second column is the discrepancy measure using the replicated data. See \code{?get_discrepancy_plot}.
+Draws of the longitudinal outcome from the posterior predictive distribution based on additionally re-drawing the latent class membership indicators are stored in \code{store_redraw.txt} with the iteration number appended. This file is of dimension \code{n.samples - n.reps} by \code{N}, where \code{N} is the number of observations (i.e., \code{length(Y)}). This file will also contain draws of residuals for the complete and replicated data, in addition to latent class membership indicator at each iteration. SubjectID, clusterID, and stratum ID will also be appended. See \code{?get_post_pred_redraw()}.
+
+Samples of a measure of discrepancy are stored in \code{store_T.txt}. This file is of dimension \code{n.samples - burn} by \code{2}, where the first column is the discrepancy measure computed using the observed data, and the second column is the discrepancy measure using the replicated data. See \code{?get_discrepancy_plot}. The discrepancy measure is computed by re-drawing the latent class indicators, in addition to the longitudinal outcomes.
 }
 \description{
 A Bayesian Growth Mixture Model (GMM) for complex survey data is fit using a Gibbs sampler with only closed-form full conditionals.
 
 The model was constructed for data with longitudinal measurements nested in subjects, subjects nested in area segments (also called clusters), and area segments nested in strata.
 
-A multinomial probit model is use to predict each subject's latent class membership. The multinomial probit model uses subjects as the unit of analysis and includes area segment and stratum specific random effects to model unobserved variations at the area segment and stratum-levels. For the area segment random effects, the model includes options for modeling either or both correlations among subjects within the same area segment and spatial correlations among neighboring area segments. Correlations among subjects within the same area segment are modeled using independent random effects assumed to follow a normal distribution. Spatial correlations among neighboring area segments are modeled with an intrinsic conditional autoregessive prior distribution. An option is included to use B-splines for flexibly modeling the relationship between one of the variables (e.g., the size variable used in probability proportional to size sampling) and probability of belonging to a latent class.
+A multinomial independence probit model is use to predict each subject's latent class membership. The multinomial independence probit model uses subjects as the unit of analysis and includes options for stratum and area segment random effects to model unobserved variations at the stratum and area segment levels. For the area segment random effects, the model includes options for modeling either or both correlations among subjects within the same area segment and spatial correlations among neighboring area segments. Correlations among subjects within the same area segment are modeled using independent random effects assumed to follow a normal distribution. Spatial correlations among neighboring area segments are modeled with an intrinsic conditional autoregessive prior distribution. An option is included to use B-splines for flexibly modeling the relationship between the latent class membership probabilities and continuously measured features of the complex sampel design (e.g., the size variable used in probability proportional to size sampling or nonresponse weighting adjustment).
 
-In the longitudinal outcomes model, latent class-specific longitudinal trajectories are estimated. Area segment and stratum specific independent random effects are modeled using latent-class specific variance parameters. The random effects are assumed to follow a normal distribution. The observation-level variances are also latent class-specific.
+In the longitudinal outcomes model, latent class-specific longitudinal trajectories are estimated. Between-subject heterogeneity is modeled with subject-specific random intercepts and slopes assumed to follow a multivariate normal distribution. There are options to include area segment and stratum-specific independent random effects modeled using latent-class specific variance parameters. The random effects are assumed to follow a normal distribution. An option is included as to whether to include both area segment and stratum-specific random effects; one or the other; or neither. The observation-level variances are also latent class-specific.
 }
 \details{
 Details are given on the specification of \code{priors} and \code{inits}.
@@ -118,7 +124,7 @@ Details are given on the specification of \code{priors} and \code{inits}.
 \enumerate{
 \item Multivariate normal prior distribution on the regression coefficients in the latent class membership model. The list entry is of the form, for example, \code{list(rep(0, s), diag(10, s))}, where \code{s} is the number of regression coefficients. \code{rep(0, s)} assigns a prior mean of 0 to all regression coefficients. A diagonal variance-covariance matrix with variance 10 is assigned.
 
-\item	An inverse gamma distribution on the variance of the independent random effects in the latent class membership model at the stratum level. The form is, for example, \code{list(0.1, 0.1)}, where the first element is the shape parameter and the second parameter is the scale parameter. Set this prior equal to \code{NULL} if \code{hierVar[[1]] = Unif}, in which case a uniform prior distribution is used.
+\item	An inverse gamma distribution on the variance of the independent random effects in the latent class membership model at the stratum level. The form is, for example, \code{list(0.1, 0.1)}, where the first element is the shape parameter and the second parameter is the scale parameter. Set this prior equal to \code{NULL} if \code{hierVar[[1]] = Unif}, in which case a uniform prior distribution is used, or if stratum level random effects are not desired.
 
 \item An inverse gamma distribution on the variance of the spatial random effects in the latent class membership model at the cluster level. The form is the same as in 2. Set this prior equal to \code{NULL} if \code{hierVar[[1]] = Unif}, in which case a uniform prior distribution is used. If spatial random effects are not desired, then use \code{list(NULL)}.
 
@@ -130,7 +136,7 @@ Details are given on the specification of \code{priors} and \code{inits}.
 
 \item An inverse gamma distribution on the variance of the independent random effects in the longitudinal outcomes model at the stratum level. The specification is the same as in 2.
 
-\item An inverse gamma distribution on the variance of the independent random effects in the longitudinal outcomes model at the cluster level. The specification is the same as in 4, except that cluster level random effects are always included in the longitudinal outcomes model.
+\item An inverse gamma distribution on the variance of the independent random effects in the longitudinal outcomes model at the cluster level. The specification is the same as in 4.
 
 \item Inverse-Wishart prior distribution on the variance-covariance matrix of the subject level random effects in the longitudinal outcomes model. The form is, for example, \code{list(q + 2, diag(0.25, q))}, where \code{q} is the number of random effects. The first element is the prior degrees of freedom, and the second element is the prior scale matrix of dimension \code{q} by \code{q}.
 
@@ -142,7 +148,7 @@ An example of the completed list object for specification of the prior distribut
 \enumerate{
 \item Initial values for the regression coefficients in the latent class membership model. The list entry is of the form, for example, \code{matrix(rep(0, s * (K - 1)), nrow = s, ncol = (K - 1))}, where \code{s} is the number of regression coefficients, \code{K} is the assumed number of latent classes.
 
-\item Initial values for the variances of the independent random effects in the latent class membership model at the stratum level. The list entry is of the form, for example, \code{rep(0.2, K - 1)}.
+\item Initial values for the variances of the independent random effects in the latent class membership model at the stratum level. The list entry is of the form, for example, \code{rep(0.2, K - 1)}. If stratum level random effects are not desired, then use \code{list(NULL)}.
 
 \item Initial values for the spatial variances. The specification is the same as in 2. If spatial random effects are not desired, then use \code{list(NULL)}.
 
@@ -152,9 +158,9 @@ An example of the completed list object for specification of the prior distribut
 
 \item Initial values for the regression coefficients in the longitudinal outcomes model. The object is a \code{p} by \code{K} matrix, where \code{p} is the number of regression coefficients and \code{K} is the number of latent classes. An example is \code{matrix(rnorm(p*K), nrow = p, ncol = K)}.
 
-\item Initial values for the variances of the independent random effects in the longitudinal outcomes model at the stratum level. The object is a \code{K} length vector. An example is \code{rep(0.1, K)}.
+\item Initial values for the variances of the independent random effects in the longitudinal outcomes model at the stratum level. The object is a \code{K} length vector. An example is \code{rep(0.1, K)}. If stratum level random effects are not desired, then use \code{list(NULL)}.
 
-\item Initial values for the variances of the independent random effects in the longitudinal outcomes model at the cluster level. The form is the same as in 7.
+\item Initial values for the variances of the independent random effects in the longitudinal outcomes model at the cluster level. The form is the same as in 7. If cluster level random effects are not desired, then use \code{list(NULL)}.
 
 \item Initial values for the variance-covariance matrix of the subject level random effects in the longitudinal outcomes model. The object is a \code{q} by \code{q} by \code{K} array, where \code{q} is the number of random effects and \code{K} is the number of assumed latent class. An example is \code{array(diag(0.5, q), dim = c(q, q, K))}.
 
@@ -173,29 +179,35 @@ An example of the completed list object for specification of the initial values 
 data(data)
 #Adjacency matrix
 data(ADJ)
-modelType <- "Both"
+LCStratumModelType <- "Random"
+LCClusterModelType <- "Both"
+LRModelType <- "Both"
+
 #Number of latent classes
 K <- 2
-#Outcome
-Y <- data$Y
 
-#Design matrices for latent class membership model, random effects, and fixed effects
-dats <- aggregate(data[ , c("subjectID", "clusterID", "stratumID", "x1")], by = list(data$subjectID), FUN = tail, n = 1)
-W <- model.matrix( ~ x1, data = dats)
-s <- ncol(W)
-#In this analysis, model time using dummies
-timedf <- data.frame(time = factor(data$time))
-Vr <- data.matrix(dummy(timedf, int = TRUE))
-colnames(Vr) <- c("time1", "time2", "time3")
-q <- ncol(Vr)
-Vf <- Vr
-p <- ncol(Vf)
-#Identifiers at the subject and observation level
-clusterIDSub <- dats$clusterID
-stratumIDSub <- dats$stratumID
-clusterIDObs <- data$clusterID
-stratumIDObs <- data$stratumID
-subjectID <- data$subjectID
+#Outcome
+Y <- "Y"
+time <- "time"
+subjectID <- "subjectID"
+clusterID <- "clusterID"
+stratumID <- "stratumID"
+
+#Latent class membership model, design matrix for fixed effects
+form1 <- ~ x1
+s <- length(all.vars(form1)) + 1
+#Longitudinal outcomes model, design matrix for fixed effects; equal to "dummy" or some formula
+form2 <- "dummy"
+#Longitudinal outcomes model, design matrix for random effect; equal to "same" or some formula
+form3 <- "same"
+#Store formulas in named list
+forms <- list(W = form1, Xf = form2, Xr = form3)
+
+#Number of time points and random effects is 3, indicate for prior and init specification below
+q <- p <- 3
+
+spline <- FALSE
+B <- NULL
 
 #Prior for hierarchical and observation level variance
 hierVar <- list("IG", "IG")
@@ -212,18 +224,13 @@ inits <- list(matrix(rep(0, s * (K - 1)), nrow = s, ncol = (K - 1)), rep(0.2, K 
      dim = c(q, q, K)), rep(1, K))
 
 #MCMC algorithm
+writeSamples <- TRUE
 n.samples <- 2000
 burn <- 1000
 update <- 10
+n.reps <- 500
 monitor <- TRUE
-res <- Bsvygmm(K = K, W = W, B = NULL, ADJ = ADJ, Y = Y,
-     Vr = Vr, Vf = Vf, subjectID = subjectID,
-     clusterIDObs = clusterIDObs, stratumIDObs = stratumIDObs,
-     clusterIDSub = clusterIDSub, stratumIDSub = stratumIDSub,
-     spline = FALSE, modelType = modelType, priors = priors,
-     hierVar = hierVar, inits = inits, n.samples = n.samples,
-     burn = burn, monitor = monitor, update = update,
-     writeSamples = TRUE)
+res <- Bsvygmm(K = K, data = data, forms = forms, ADJ = ADJ, Y = Y, time = time, subjectID = subjectID, clusterID = clusterID, stratumID = stratumID, spline = spline, B = B, LCStratumModelType = LCStratumModelType, LCClusterModelType = LCClusterModelType, LRModelType = LRModelType, priors = priors, hierVar = hierVar, inits = inits, n.samples = n.samples, burn = burn, monitor = monitor, update = update, n.reps = n.reps, writeSamples = writeSamples)
 
 #Get Bayesian posterior predictive p-value, see ?get_discrepancy_plot
 #Set working directory to where discrepancy samples are written

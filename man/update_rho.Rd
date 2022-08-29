@@ -24,7 +24,7 @@ update_rho(
 
 \item{b}{A \code{q} column matrix of subject specific effects.}
 
-\item{zeta}{A \code{K} column matrix of stratum level intercepts.}
+\item{zeta}{A \code{K} column matrix of stratum level intercepts. Equals \code{NULL} if not desired.}
 
 \item{beta}{A \code{K} column matrix of regression coefficients associated with \code{Vf}.}
 

@@ -24,9 +24,9 @@ update_sigma2(
 \arguments{
 \item{C}{Latent class assignments for each subject.}
 
-\item{zeta}{A \code{K} column matrix of intercepts at the stratum level.}
+\item{zeta}{A \code{K} column matrix of intercepts at the stratum level. Equals \code{NULL} if not desired.}
 
-\item{rho}{A \code{K} column matrix of intercepts at the area segment level.}
+\item{rho}{A \code{K} column matrix of intercepts at the area segment level.  Equals \code{NULL} if not desired.}
 
 \item{b}{A \code{q} column matrix of subject specific effects.}
 

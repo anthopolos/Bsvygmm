@@ -23,7 +23,9 @@ get_observed_posterior(
   ADJ,
   priors,
   hierVar,
-  modelType,
+  LCStratumModelType,
+  LCClusterModelType,
+  LRModelType,
   spline
 )
 }
@@ -64,7 +66,11 @@ get_observed_posterior(
 
 \item{hierVar}{List of priors for variance at observation level and hierarchical variances.}
 
-\item{modelType}{String for model type.}
+\item{LCStratumModelType}{A string. For the latent class membership model, if \code{LCStratumModelType} is \code{Random}, then the latent class membership model includes stratum level random effects. If \code{Fixed}, then stratum level random effects are not included in the latent class membership model. Stratum fixed effects may be included in the design matrix \code{W}.}
+
+\item{LCClusterModelType}{String for model type in the latent class membership model.}
+
+\item{LRModelType}{String for model type in the longitudinal response model.}
 
 \item{spline}{Logical. If \code{TRUE}, a spline is included in the latent class membership model.}
 }

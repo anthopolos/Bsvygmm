@@ -4,7 +4,7 @@
 #' @param Z A \code{K-1} column matrix of latent variable \code{Z}.
 #' @param delta A \code{K-1} column matrix of regression coefficients in the multinomial probit model with \code{k=1} fixed to zero.
 #' @param alpha A \code{K-1} column matrix of regression coefficients for the B-spline.
-#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects.
+#' @param deltaStratum A \code{K-1} column matrix of stratum specific effects. Equals \code{NULL} if not desired.
 #' @param u A \code{K-1} column matrix of area segment specific effects for modeling correlations among subjects in the same area segment. Equals \code{NULL} if not desired.
 #' @param nu A \code{K-1} column matrix of spatial random effects. Equals \code{NULL} if not desired.
 #' @param W An \code{s} column design matrix of covariates, including a column of one's for intercept.
@@ -44,9 +44,9 @@ update_delta_MNP <- function(Z, delta, alpha, deltaStratum, u, nu, W, B, prior.m
     # 1. Spatially structured heterogeneity at the cluster level only
     if (!is.null(nu) & is.null(u)) {
       if (spline) {
-        mu[ , k] <- Z[ , k] - B %*% alpha[ , k] - nu[clusterIDSubf, k] - deltaStratum[factor(stratumIDSub), k]
+        mu[ , k] <- Z[ , k] - B %*% alpha[ , k] - nu[clusterIDSubf, k]
       } else {
-        mu[ , k] <-  Z[ , k] - nu[clusterIDSubf, k] - deltaStratum[factor(stratumIDSub), k]
+        mu[ , k] <-  Z[ , k] - nu[clusterIDSubf, k]
       }
 
     }
@@ -54,9 +54,9 @@ update_delta_MNP <- function(Z, delta, alpha, deltaStratum, u, nu, W, B, prior.m
     # 2. Unstructured heterogeneity at the cluster level only
     if (is.null(nu) & !is.null(u)) {
       if (spline) {
-        mu[ , k] <- Z[ , k] - B %*% alpha[ , k] - u[factor(clusterIDSub), k] - deltaStratum[factor(stratumIDSub), k]
+        mu[ , k] <- Z[ , k] - B %*% alpha[ , k] - u[factor(clusterIDSub), k]
       } else {
-        mu[ , k] <- Z[ , k] - u[factor(clusterIDSub), k] - deltaStratum[factor(stratumIDSub), k]
+        mu[ , k] <- Z[ , k] - u[factor(clusterIDSub), k]
       }
 
     }
@@ -64,11 +64,27 @@ update_delta_MNP <- function(Z, delta, alpha, deltaStratum, u, nu, W, B, prior.m
     # 3. Spatially structured and unstructured heterogeneity at the cluster level only
     if (!is.null(nu) & !is.null(u)) {
       if (spline) {
-        mu[ , k] <-  Z[ , k] - B %*% alpha[ , k] - u[factor(clusterIDSub), k] - deltaStratum[factor(stratumIDSub), k] - nu[clusterIDSubf, k]
+        mu[ , k] <-  Z[ , k] - B %*% alpha[ , k] - u[factor(clusterIDSub), k] - nu[clusterIDSubf, k]
       } else {
-        mu[ , k] <- Z[ , k] - u[factor(clusterIDSub), k] - deltaStratum[factor(stratumIDSub), k] - nu[clusterIDSubf, k]
+        mu[ , k] <- Z[ , k] - u[factor(clusterIDSub), k] - nu[clusterIDSubf, k]
       }
 
+    }
+
+    # 4. No spatially structured and unstructured heterogeneity at the cluster level only
+    if (is.null(nu) & is.null(u)) {
+      if (spline) {
+        mu[ , k] <-  Z[ , k] - B %*% alpha[ , k]
+      } else {
+        mu[ , k] <- Z[ , k]
+      }
+
+    }
+
+
+    # Add stratum level random effect if desired
+    if (!is.null(deltaStratum)) {
+      mu[ , k] <- mu[ , k] - deltaStratum[factor(stratumIDSub), k]
     }
 
 

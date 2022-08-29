@@ -6,15 +6,14 @@
 #' @param beta Current iteration of fixed effects.
 #' @param sigma2 Current iteration of observation level variance.
 #' @param Phi Current iteration of between subject variance-covariance.
-#' @param Omega Current iteration of between area segment level variance.
-#' @param Psi Current iteration of between stratum level variance.
+#' @param Omega Current iteration of between area segment level variance. Equals \code{NULL} if not desired.
+#' @param Psi Current iteration of between stratum level variance. Equals \code{NULL} if not desired.
 #' @param Y Longitudinal outcomes.
 #' @param Vf Design matrix for fixed effects.
 #' @param Vr Design matrix for random effects.
 #' @param subjectID Subject ID for each observation.
-#' @return Observed data likelihood at the current iteration.
-#' @keywords internal
-get_observed_llik <- function(priorPik, beta, sigma2, Phi, Omega, Psi, Y, Vf, Vr, subjectID) {
+#' @return Observed data likelihood contribution of each of \code{n} subjects at the current iteration.
+get_observed_llik_sub <- function(priorPik, beta, sigma2, Phi, Omega, Psi, Y, Vf, Vr, subjectID) {
 
   n <- length(unique(subjectID))
   K <- dim(priorPik)[2]
@@ -33,15 +32,41 @@ get_observed_llik <- function(priorPik, beta, sigma2, Phi, Omega, Psi, Y, Vf, Vr
     sigma2k <- sigma2[k]
 
     Phik <- Phi[ , , k]
-    Omegak <- Omega[k]
-    Psik <- Psi[k]
+
+    # Cluster level information included or not
+    if (!is.null(Omega)) {
+      Omegak <- Omega[k]
+    } else {
+      Omegak <- NULL
+    }
+
+    # Stratum level information included or not
+    if (!is.null(Psi)) {
+      Psik <- Psi[k]
+    } else {
+      Psik <- NULL
+    }
+
 
     llik_y_pikTemp <- sapply(unique(subjectID), function(x) {
 
       Yi <- Y[which(subjectID == x)]
       muki <- muk[which(subjectID == x)]
       Vri <- matrix(Vr[which(subjectID == x), ], nrow = length(Yi), ncol = q)
-      Rki <- ((Vri %*% Phik %*% t(Vri)) + diag(sigma2k, nrow = length(Yi), ncol = length(Yi)) + matrix(rep(Omegak, length(Yi) * length(Yi)), nrow = length(Yi), ncol = length(Yi)) + matrix(rep(Psik, length(Yi) * length(Yi)), nrow = length(Yi), ncol = length(Yi)))
+
+      # Marginal variance for each subject based on class k depends on whether cluster and stratum level random effects were included
+      Rki <- (Vri %*% Phik %*% t(Vri)) + diag(sigma2k, nrow = length(Yi), ncol = length(Yi))
+
+      # Cluster level
+      if (!is.null(Omegak)) {
+        Rki <- Rki + matrix(rep(Omegak, length(Yi) * length(Yi)), nrow = length(Yi), ncol = length(Yi))
+      }
+
+      # Stratum level
+      if (!is.null(Psik)) {
+        Rki <- Rki + matrix(rep(Psik, length(Yi) * length(Yi)), nrow = length(Yi), ncol = length(Yi))
+      }
+
       mvtnorm::dmvnorm(Yi, mean = muki, sigma = Rki, log = FALSE)
     })
 
@@ -49,14 +74,11 @@ get_observed_llik <- function(priorPik, beta, sigma2, Phi, Omega, Psi, Y, Vf, Vr
 
   }
 
-  # Log likelihood calculation at iteration $l$:
-  # \log f(y)^l = & \log \prod_{i = 1}^n \sum_{k = 1}^K \p_{ik}^l f(y_i \ | \ \Theta_k^l)
-  # = & \sum_{i = 1}^n \log \sum_{k = 1}^K \p_{ik}^l f(y_i \ | \ \Theta_k^l)
-  # For iteration $l$, calculate \log \sum_{k = 1}^K \p_{ik}^l f(y_i \ | \ \Theta_k^l)
+  # Likelihood calculation at iteration $l$ for subject $i$:
+  # \sum_{k = 1}^K \p_{ik}^l f(y_i \ | \ \Theta_k^l)
   #Store_llikTemp will be 1 by n
-  store_llikTemp <- apply(priorPik * llik_y_pik, 1, get_log_sum_exponential)
+  store_llikTemp <- apply(priorPik * llik_y_pik, 1, sum)
 
-  ### Log likelihood estimate
-  return(sum(store_llikTemp))
-
+  ### Log likelihood estimate for each subject
+  return(store_llikTemp)
 }

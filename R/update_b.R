@@ -3,8 +3,8 @@
 #' @description This uses a normal prior distribution with mean 0 to update the subject level effects in the longitudinal outcomes model.
 #'
 #' @param C Latent class assignments for each subject.
-#' @param rho  A \code{K} column matrix of area segment level intercepts.
-#' @param zeta  A \code{K} column matrix of stratum level intercepts.
+#' @param rho  A \code{K} column matrix of area segment level intercepts. Equals \code{NULL} if not desired.
+#' @param zeta  A \code{K} column matrix of stratum level intercepts. Equals \code{NULL} if not desired.
 #' @param beta A \code{K} column matrix of regression coefficients associated with \code{Vf}.
 #' @param Phi A variance-covariance matrix for the subject level effects.
 #' @param sigma2 A \code{K} length vector of observation level variances.
@@ -51,11 +51,20 @@ update_b <- function(C, rho, zeta, beta, Phi, sigma2, Y, Vf, Vr, subjectID, clus
     ### Unknown parameters
     sigma2k <- sigma2[k]
     betak <- beta[ , k]
-    rhok  <- rho[ind_cluster, k]
-    zetak  <- zeta[ind_stratum, k]
 
-    rhokObs <- rhok[factor(clusterIDObsk)]
-    zetakObs <- zetak[factor(stratumIDObsk)]
+    if (!is.null(rho)) {
+      rhok  <- rho[ind_cluster, k]
+      rhokObs <- rhok[factor(clusterIDObsk)]
+    } else {
+      rhokObs <- NULL
+    }
+
+    if (!is.null(zeta)) {
+      zetak  <- zeta[ind_stratum, k]
+      zetakObs <- zetak[factor(stratumIDObsk)]
+    } else {
+      zetakObs <- NULL
+    }
 
     Phik <- Phi[ , , k]
 
@@ -63,16 +72,31 @@ update_b <- function(C, rho, zeta, beta, Phi, sigma2, Y, Vf, Vr, subjectID, clus
 
       # Data for subject x in latent class k
       Yi <- Yk[which(subjectIDk == x)]
-      Vri <- matrix(Vrk[which(subjectIDk == x), ], nrow = length(Yi), ncol = q)
+      Vri <- matrix(as.matrix(Vrk)[which(subjectIDk == x), ], nrow = length(Yi), ncol = q)
       Vfi <- matrix(Vfk[which(subjectIDk == x), ], nrow = length(Yi), ncol = p)
-      rhoi <- rhokObs[which(subjectIDk == x)]
-      zetai <- zetakObs[which(subjectIDk == x)]
 
       # Posterior variance
       post_var <- solve(t(Vri) %*% Vri / sigma2k + solve(Phik))
 
       # Posterior mean
-      post_mean <- post_var %*% t(t(Yi) %*% Vri - t(betak) %*% t(Vfi) %*% Vri - t(rhoi) %*% Vri - t(zetai) %*% Vri) / sigma2k
+      #Both cluster and stratum level included
+      if (!is.null(rhokObs) & !is.null(zetakObs)) {
+        rhoi <- rhokObs[which(subjectIDk == x)]
+        zetai <- zetakObs[which(subjectIDk == x)]
+        post_mean <- post_var %*% t(t(Yi) %*% Vri - t(betak) %*% t  (Vfi) %*% Vri - t(rhoi) %*% Vri - t(zetai) %*% Vri) / sigma2k
+      #Only cluster
+      } else if (!is.null(rhokObs) & is.null(zetakObs)) {
+        rhoi <- rhokObs[which(subjectIDk == x)]
+        post_mean <- post_var %*% t(t(Yi) %*% Vri - t(betak) %*% t  (Vfi) %*% Vri - t(rhoi) %*% Vri) / sigma2k
+      #Only stratum
+      } else if (is.null(rhokObs) & !is.null(zetakObs)) {
+        zetai <- zetakObs[which(subjectIDk == x)]
+        post_mean <- post_var %*% t(t(Yi) %*% Vri - t(betak) %*% t  (Vfi) %*% Vri - t(zetai) %*% Vri) / sigma2k
+      #Neither
+      } else if (is.null(rhokObs) & is.null(zetakObs)) {
+        post_mean <- post_var %*% t(t(Yi) %*% Vri - t(betak) %*% t  (Vfi) %*% Vri) / sigma2k
+      }
+
 
       bi <- mnormt::rmnorm(1, mean = post_mean, varcov = post_var)
 

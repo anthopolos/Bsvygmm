@@ -2,7 +2,7 @@
 #'
 #' @description The reference for the approach is in Fruhwirth-Schnatter, S., & Pyne, S. (2010). Bayesian Inference for Finite Mixtures of Univariate and Multivariate Skew-Normal and Skew-t Distributions. Biostatistics, 11(2), 317-336.
 #'
-#' @param x Samples.
+#' @param samples Samples.
 #' @return An index for the mode.
 get_posterior_mode <- function(samples) {
 
