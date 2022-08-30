@@ -3,7 +3,7 @@
 \docType{data}
 \name{data}
 \alias{data}
-\title{Longitudinal data for fitting a 2-class model with spatial and independent random effects to predict latent class membership.}
+\title{Longitudinal data for fitting a 2-class model with spatial and independent random effects at the area segment-level to predict latent class membership.}
 \format{
 A data frame with 600 subjects, each of whom has 3 measurements. There are 50 clusters, each of which contains 12 subjects. There are 10 strata, each of which contains 5 clusters, and therefore 60 subjects. The data frame has 1800 rows and 6 variables defined as follows.
 

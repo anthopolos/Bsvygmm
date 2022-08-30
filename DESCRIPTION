@@ -1,7 +1,7 @@
 Package: Bsvygmm
 Type: Package
 Title: Bayesian Growth Mixture Model for Complex Survey Data
-Version: 0.1.1
+Version: 0.1.2
 Author: Rebecca Anthopolos
 Maintainer: Rebecca Anthopolos <anthopolos@gmail.com>
 Description: Complex sample design is integrated into a Bayesian growth mixture modeling framework. Observations are nested within subjects, and subjects are nested within area segments (also called clusters), strata, and unobserved latent classes.

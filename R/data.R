@@ -1,4 +1,4 @@
-#' Longitudinal data for fitting a 2-class model with spatial and independent random effects to predict latent class membership.
+#' Longitudinal data for fitting a 2-class model with spatial and independent random effects at the area segment-level to predict latent class membership.
 #'
 #' A dataset containing longitudinal measurements for subjects nested in clusters, which are in term nested in strata. This dataset was generated using the \code{simdat} function in the package.
 #'

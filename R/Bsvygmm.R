@@ -112,7 +112,7 @@
 #'
 #'Draws of the longitudinal outcome conditional on latent class from the posterior predictive distribution are stored in \code{store_Ydraw.txt}. This file is of dimension \code{n.samples - burn} by \code{N}, where \code{N} is the number of observations (i.e., \code{length(Y)}).
 #'
-#'Draws of the longitudinal outcome from the posterior predictive distribution based on additionally re-drawing the latent class membership indicators are stored in \code{store_redraw.txt} with the iteration number appended. This file is of dimension \code{n.samples - n.reps} by \code{N}, where \code{N} is the number of observations (i.e., \code{length(Y)}). This file will also contain draws of residuals for the complete and replicated data, in addition to latent class membership indicator at each iteration. SubjectID, clusterID, and stratum ID will also be appended. See \code{?get_post_pred_redraw()}.
+#'Draws of the longitudinal outcome from the posterior predictive distribution based on additionally re-drawing the latent class membership indicators are stored in \code{store_redraw.txt} with the iteration number appended. There will be \code{n.samples - n.reps} files printed to text file. Each file will contain \code{N} observations (i.e., \code{length(Y)}) and variables for draws of residuals for the complete and replicated data, in addition to latent class membership indicator at each iteration. SubjectID, clusterID, and stratum ID will also be appended. See \code{?get_post_pred_redraw()}.
 #'
 #'Samples of a measure of discrepancy are stored in \code{store_T.txt}. This file is of dimension \code{n.samples - burn} by \code{2}, where the first column is the discrepancy measure computed using the observed data, and the second column is the discrepancy measure using the replicated data. See \code{?get_discrepancy_plot}. The discrepancy measure is computed by re-drawing the latent class indicators, in addition to the longitudinal outcomes.
 #'
@@ -123,9 +123,9 @@
 #' data(data)
 #' #Adjacency matrix
 #' data(ADJ)
-#' LCStratumModelType <- "Random"
+#' LCStratumModelType <- "Fixed"
 #' LCClusterModelType <- "Both"
-#' LRModelType <- "Both"
+#' LRModelType <- "None"
 #'
 #' #Number of latent classes
 #' K <- 2
@@ -157,22 +157,22 @@
 #' hierVar <- list("IG", "IG")
 #'
 #' #Priors
-#' priors <- list(list(rep(0, s), diag(1, s)), list(.1, .1), list(2, 1),
+#' priors <- list(list(rep(0, s), diag(1, s)), list(NULL), list(2, 1),
 #'      list(.1, .1), list(NULL), list(rep(0, p), diag(10, p)),
-#'      list(.1, .1), list(.1, .1), list((q + 2), diag(0.25, q)), list(.1, .1))
+#'      list(NULL), list(NULL), list((q + 2), diag(0.25, q)), list(.1, .1))
 #'
 #' #Initial values
-#' inits <- list(matrix(rep(0, s * (K - 1)), nrow = s, ncol = (K - 1)), rep(0.2, K - 1),
+#' inits <- list(matrix(rep(0, s * (K - 1)), nrow = s, ncol = (K - 1)), NULL,
 #'      rep(0.2, K - 1), rep(0.2, K - 1), NULL, matrix(rnorm(p * K), nrow = p, ncol = K),
-#'      rep(0.1, K), rep(0.1, K), array(diag(0.5, q),
+#'      NULL, NULL, array(diag(0.5, q),
 #'      dim = c(q, q, K)), rep(1, K))
 #'
 #' #MCMC algorithm
 #' writeSamples <- TRUE
-#' n.samples <- 2000
-#' burn <- 1000
+#' n.samples <- 1000
+#' burn <- 500
 #' update <- 10
-#' n.reps <- 500
+#' n.reps <- 10
 #' monitor <- TRUE
 #' res <- Bsvygmm(K = K, data = data, forms = forms, ADJ = ADJ, Y = Y, time = time, subjectID = subjectID, clusterID = clusterID, stratumID = stratumID, spline = spline, B = B, LCStratumModelType = LCStratumModelType, LCClusterModelType = LCClusterModelType, LRModelType = LRModelType, priors = priors, hierVar = hierVar, inits = inits, n.samples = n.samples, burn = burn, monitor = monitor, update = update, n.reps = n.reps, writeSamples = writeSamples)
 #'
@@ -1159,6 +1159,8 @@ Bsvygmm <- function(K, data, forms, ADJ, Y, time, subjectID, clusterID, stratumI
 
   cat("\n", "Model comparison statistics:", "\n")
   print(table_model_comparison)
+  cat("\n", "BIC1:", "computed using the number of unique subjects", "\n")
+  cat("BIC2:", "computed using the effective sample size accounting for correlations among repeated measures", "\n")
   print(table_pD)
 
   return(S)
